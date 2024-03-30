@@ -1,0 +1,44 @@
+---
+repos:
+  - repo: local
+    hooks:
+      - id: actionlint
+        name: Actionlint Workflows
+        description: Runs actionlint against workflow files
+        language: system
+        types: ["yaml"]
+        files: ^\.github/workflows/
+        entry: actionlint
+        stages: [commit, push, manual]
+      - id: markdownlint
+        name: Markdownlint files
+        description: Runs markdownlint against md files
+        language: system
+        types: ["markdown"]
+        files: .
+        entry: markdownlint-cli2 "*.md"
+        stages: [commit, push, manual]
+      - id: pylint
+        name: pylint files
+        description: Runs pylint against python files
+        language: python
+        types: ["python"]
+        files: .
+        entry: pylint **/*.py --fail-under=0
+        stages: [commit, push, manual]
+      - id: shellcheck
+        name: Shellcheck setup script
+        description: Runs shellcheck against script files
+        language: system
+        types: ["bash"]
+        files: scripts/setup.sh
+        entry: shellcheck scripts/setup.sh
+        stages: [commit, push, manual]
+      - id: yamllint
+        name: Yamllint files
+        description: Runs yamllint against non-workflow files
+        language: system
+        types: ["yaml"]
+        files: .
+        entry: yamllint -c .linters/yaml-linter.yml
+        stages: [commit, push, manual]

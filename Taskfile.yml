@@ -1,0 +1,83 @@
+version: "3"
+
+vars:
+  IMAGE_VERSION: "alpha3"
+  REGISTRY_URL: ""
+  IMAGE_NAME: "multigpu"
+
+tasks:
+  default:
+    desc: "Display available tasks"
+    cmds:
+      - task --list
+
+  actionlint:
+    desc: "Run actionlint"
+    cmds:
+      - echo "Running actionlint"
+      - actionlint -config-file ./.github/actionlint.yml
+
+  markdownlint:
+    desc: "Run markdownlint"
+    cmds:
+      - echo "Running markdownlint"
+      - markdownlint-cli2 "**/*.md"
+
+  shellcheck:
+    desc: "Run shellcheck"
+    cmds:
+      - echo "Running shellcheck"
+      - shellcheck scripts/setup.sh
+
+  yamllint:
+    desc: "Run yamllint"
+    cmds:
+      - echo "Running yamllint"
+      - yamllint -c .linters/yaml-linter.yml .
+
+  pylint:
+    desc: "Run pylint"
+    cmds:
+      - echo "Running pylint"
+      - pylint **/*.py
+
+  buildx:
+    desc: Setup buildx
+    cmds:
+      - docker buildx create --name devops --use --bootstrap
+
+  docker-build:
+    desc: Build Docker Container
+    # deps:
+    #   - task: buildx
+    cmds:
+      - DOCKER_BUILDKIT=1 docker buildx build -f ./docker/Dockerfile  --platform linux/amd64 --platform linux/arm64 -t {{.DOCKER_REGISTRY_URL}}/library/{{.IMAGE_NAME}}:{{.IMAGE_VERSION}} .
+
+  docker-load:
+    desc: Build Docker Container
+    # deps:
+    #   - task: buildx
+    cmds:
+      - DOCKER_BUILDKIT=1 docker buildx build -f ./docker/Dockerfile --load -t {{.DOCKER_REGISTRY_URL}}/library/{{.IMAGE_NAME}}:{{.IMAGE_VERSION}} .
+
+  docker-push:
+    desc: Build and Push Docker Container
+    # deps:
+    #   - task: buildx
+    cmds:
+      - DOCKER_BUILDKIT=1 docker buildx build --push -f ./docker/Dockerfile --platform linux/amd64 --platform linux/arm64 -t {{.DOCKER_REGISTRY_URL}}/library/{{.IMAGE_NAME}}:{{.IMAGE_VERSION}} .
+
+  docker-run:
+    desc: Run Docker Container
+    cmds:
+      - docker run -p 8501:8501 {{.DOCKER_REGISTRY_URL}}/library/{{.IMAGE_NAME}}:{{.IMAGE_VERSION}}
+
+  docker-run-it:
+    desc: Run Docker Container
+    cmds:
+      - docker run -it -p 8501:8501 {{.DOCKER_REGISTRY_URL}}/library/{{.IMAGE_NAME}}:{{.IMAGE_VERSION}} /bin/sh
+
+  run:
+    desc: Run the Streamlit app
+    cmds:
+      - streamlit run Multi-GPU.py
